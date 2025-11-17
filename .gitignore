@@ -1,4 +1,6 @@
 *.json
+*.tsv
+*.xlsx
 codb_data/
 
 # Byte-compiled / optimized / DLL files

@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 def save_with_playwright(kid):
     # print(kid)
     # 跳过已经完成下载的文件
-    if os.path.exists("codb_data",kid+"_data.txt"):
+    if os.path.exists(os.path.join("codb_data",kid+"_data.txt")):
         return
     url = "http://www.cyanoomics.cn/lz/cyano_detail/"+kid
     with sync_playwright() as p:
