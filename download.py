@@ -3,6 +3,10 @@ import json
 import concurrent.futures
 from playwright.sync_api import sync_playwright
 
+species_name = "29413"
+os.chdir(species_name)
+os.makedirs("codb_data",exist_ok=True)
+
 def save_with_playwright(kid):
     # print(kid)
     # 跳过已经完成下载的文件
@@ -47,8 +51,8 @@ def save_with_playwright(kid):
         if not finish_flag:
             print(kid,"query failed")
 
-with open("kegg_id.json",'r') as f:
+with open(os.path.join("kegg_id.json"),'r') as f:
     kegg_id = json.load(f)
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
     executor.map(save_with_playwright, kegg_id)
