@@ -1,7 +1,7 @@
 import json
 import os
 
-species_name = "29413"
+species_name = "7120"
 os.chdir(species_name)
 with open("pid_list.json","r") as f:
     pid_list = json.load(f)

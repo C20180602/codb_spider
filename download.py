@@ -33,6 +33,8 @@ def save_with_playwright(kid):
                     f.write('.\n')
                     finish_flag = False
                 if pid:
+                    if pid.endswith("u"):
+                        pid = pid[:-1]
                     f.write(pid.text_content()+'\n')
                 else:
                     f.write('.\n')

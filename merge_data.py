@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 
-species_name = "29413"
+species_name = "7120"
 os.chdir(species_name)
 
 # 正常情况只需要整理CyanoOmicsDB数据就可以了
@@ -26,6 +26,7 @@ for file in os.listdir("codb_data"):
                     pg_dict[pid].add(kgid)
                     if gids != ".":
                         for gid in gids.split(";"):
+                            gid = gid.strip("; ")
                             pg_dict[pid].add(gid)
                     if go_ids != ".":
                         for go_id in go_ids.split("  "):
@@ -45,41 +46,43 @@ with open("uni_gid_go.tsv","r") as f:
             pgo_dict[pid] = set()
         if gids != "":
             for gid in gids.split(" "):
+                gid = gid.strip("; ")
                 pg_dict[pid].add(gid)
+        if go_ids.strip() != "":
+            for go_id in go_ids.strip().split("; "):
+                pgo_dict[pid].add(go_id)
+        line = f.readline()
+                
+# 合并CMDB数据
+df = pd.read_excel('Protein_information_table.xlsx')
+pid_column = df.iloc[:, 0].tolist()
+gid_column = df.iloc[:, 3].tolist()
+sp_column = df.iloc[:, 4].tolist()
+for pid,gids,sp in zip(pid_column,gid_column,sp_column):
+    if sp == "Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576)":
+        if pid not in pid_list:
+            pid_list.add(pid)
+            pg_dict[pid] = set()
+            pgo_dict[pid] = set()
+        if isinstance(gids,float) and np.isnan(gids):
+            continue
+        for gid in gids.split(' '):
+            if gid != "":
+                gid = gid.strip("; ")
+                pg_dict[pid].add(gid)
+with open("cmdb_go.tsv","r") as f:
+    line = f.readline()
+    line = f.readline()
+    while line:
+        pid,_,go_ids = line.split("\t")
+        # 这里面数据有些是其他物种的，只筛选出已经在并集中的蛋白质
+        if pid not in pid_list:
+            line = f.readline()
+            continue
         if go_ids.strip() != "":
             for gid in go_ids.strip().split("; "):
                 pgo_dict[pid].add(gid)
         line = f.readline()
-                
-# 合并CMDB数据
-# df = pd.read_excel('Protein_information_table.xlsx')
-# pid_column = df.iloc[:, 0].tolist()
-# gid_column = df.iloc[:, 3].tolist()
-# sp_column = df.iloc[:, 4].tolist()
-# for pid,gids,sp in zip(pid_column,gid_column,sp_column):
-#     if sp == "Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576)":
-#         if pid not in pid_list:
-#             pid_list.add(pid)
-#             pg_dict[pid] = set()
-#             pgo_dict[pid] = set()
-#         if isinstance(gids,float) and np.isnan(gids):
-#             continue
-#         for gid in gids.split(' '):
-#             if gid != "":
-#                 pg_dict[pid].add(gid)
-# with open("cmdb_go.tsv","r") as f:
-#     line = f.readline()
-#     line = f.readline()
-#     while line:
-#         pid,_,go_ids = line.split("\t")
-#         # 这里面数据有些是其他物种的，只筛选出已经在并集中的蛋白质
-#         if pid not in pid_list:
-#             line = f.readline()
-#             continue
-#         if go_ids.strip() != "":
-#             for gid in go_ids.strip().split("; "):
-#                 pgo_dict[pid].add(gid)
-#         line = f.readline()
                 
 with open("pid_list.json", 'w') as f:
     json.dump(list(pid_list), f, indent=4)
@@ -126,14 +129,14 @@ with open("string_ppi.txt", "r") as f:
             ppi_list.add((stid2pid_map[stid1], stid2pid_map[stid2]))
         line = f.readline()
         
-# df = pd.read_excel('PPI_information_table.xlsx')
-# pid1_list = df.iloc[:, 0].tolist()
-# pid2_list = df.iloc[:, 1].tolist()
-# sp_column = df.iloc[:, 6].tolist()
-# for pid1, pid2, sp in zip(pid1_list, pid2_list, sp_column):
-#     if sp == "Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576)":
-#         if pid1 in pid_list and pid2 in pid_list:
-#             ppi_list.add((pid1,pid2))
+df = pd.read_excel('PPI_information_table.xlsx')
+pid1_list = df.iloc[:, 0].tolist()
+pid2_list = df.iloc[:, 1].tolist()
+sp_column = df.iloc[:, 6].tolist()
+for pid1, pid2, sp in zip(pid1_list, pid2_list, sp_column):
+    if sp == "Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576)":
+        if pid1 in pid_list and pid2 in pid_list:
+            ppi_list.add((pid1,pid2))
 
 with open("ppi_list.json", "w") as f:
     json.dump(list(ppi_list), f, indent=4)
